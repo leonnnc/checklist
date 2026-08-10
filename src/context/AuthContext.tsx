@@ -11,6 +11,7 @@ interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
+  isAdmin: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -19,7 +20,7 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 export const useAuthCtx = () => useContext(AuthContext);
 
 export function AuthContextProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser]       = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -41,8 +42,10 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
     const cred = await signInWithEmailAndPassword(auth, email, password);
     const p = await getUserProfile(cred.user.uid);
     if (!p) throw new Error("Usuario no encontrado en el sistema.");
-    if ((p as any).rol === "admin") throw new Error("Usa el panel web para acceder como admin.");
-    if (!(p as any).activo) throw new Error("Tu cuenta está desactivada. Contacta al administrador.");
+    // Admin y usuarios activos pueden entrar
+    if ((p as any).rol !== "admin" && !(p as any).activo) {
+      throw new Error("Tu cuenta está desactivada. Contacta al administrador.");
+    }
     setProfile(p as UserProfile);
   };
 
@@ -52,8 +55,10 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
     setProfile(null);
   };
 
+  const isAdmin = profile?.rol === "admin";
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, isAdmin, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
