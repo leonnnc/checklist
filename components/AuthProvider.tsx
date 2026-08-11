@@ -1,6 +1,9 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from "firebase/auth";
+import {
+  onAuthStateChanged, signInWithEmailAndPassword,
+  signOut, User
+} from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { useRouter, usePathname } from "next/navigation";
@@ -16,25 +19,41 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 export const useAuth = () => useContext(AuthContext);
 
+// Intenta leer el perfil hasta 3 veces con pausa entre intentos
+async function fetchRolWithRetry(uid: string, attempts = 3): Promise<string | null> {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const snap = await getDoc(doc(db, "usuarios", uid));
+      return snap.data()?.rol ?? null;
+    } catch (e: any) {
+      if (i < attempts - 1) {
+        await new Promise(r => setTimeout(r, 1000));
+      }
+    }
+  }
+  return null;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser]       = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const router   = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
-        const snap = await getDoc(doc(db, "usuarios", u.uid));
-        const rol = snap.data()?.rol;
-        setIsAdmin(rol === "admin");
-        if (rol !== "admin" && pathname !== "/login") {
+        const rol = await fetchRolWithRetry(u.uid);
+        if (rol === "admin") {
+          setIsAdmin(true);
+        } else {
+          // Si no es admin o no se pudo leer, cerrar sesión
+          setIsAdmin(false);
           await signOut(auth);
           setUser(null);
-          setIsAdmin(false);
-          router.replace("/login");
+          if (pathname !== "/login") router.replace("/login");
         }
       } else {
         setIsAdmin(false);
@@ -42,12 +61,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
     return unsub;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = async (email: string, password: string) => {
     const cred = await signInWithEmailAndPassword(auth, email, password);
-    const snap = await getDoc(doc(db, "usuarios", cred.user.uid));
-    if (snap.data()?.rol !== "admin") {
+    const rol  = await fetchRolWithRetry(cred.user.uid);
+    if (rol !== "admin") {
       await signOut(auth);
       throw new Error("Solo los administradores pueden acceder a este panel.");
     }
@@ -55,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     await signOut(auth);
-    router.replace("/login");
+    router.replace("/intro");
   };
 
   return (

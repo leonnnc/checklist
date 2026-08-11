@@ -6,14 +6,17 @@ import { useAuth } from "@/components/AuthProvider";
 export default function RootPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+
   useEffect(() => {
     if (!loading) {
-      router.replace(user ? "/dashboard" : "/login");
+      // Siempre pasar por intro primero
+      router.replace("/intro");
     }
-  }, [user, loading, router]);
+  }, [loading, router]);
+
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="w-8 h-8 border-4 border-blue-900 border-t-transparent rounded-full animate-spin" />
+    <div className="flex items-center justify-center min-h-screen bg-[#1a237e]">
+      <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }

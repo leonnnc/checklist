@@ -9,6 +9,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <title>Depa 804 — Admin</title>
         <meta name="description" content="Panel de administración Depa 804" />
+        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
       </head>
       <body>
         <AuthProvider>
