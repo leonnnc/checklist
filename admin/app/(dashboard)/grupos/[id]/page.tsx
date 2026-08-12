@@ -100,7 +100,7 @@ export default function GrupoDetallePage() {
   );
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="flex items-center gap-3 mb-6">
         <Link href="/grupos" className="text-gray-400 hover:text-gray-600 transition">
           <ChevronLeft size={20} />

@@ -24,7 +24,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 bg-gray-50 overflow-auto">{children}</main>
+      {/* En móvil el sidebar es un drawer, el main ocupa todo el ancho */}
+      <main className="flex-1 bg-gray-50 overflow-auto min-w-0">
+        {children}
+      </main>
     </div>
   );
 }

@@ -58,7 +58,7 @@ export default function ProgresoPage() {
   const [usuarioDetalle, setUsuarioDetalle] = useState<string | null>(null);
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Progreso en tiempo real</h1>
         <p className="text-gray-500 text-sm mt-1">Monitorea el avance de cada usuario</p>
